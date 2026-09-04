@@ -1,0 +1,30 @@
+{
+  "spec_version": "2.0",
+  "id": "customer-project",
+  "title": "Customer project",
+  "goal": "Turn a plain-language request into a verified daily-use solution.",
+  "customer": "Customer",
+  "business_requirements": ["The customer does not edit runtime configuration files."],
+  "non_functional_requirements": ["All role interactions are traceable."],
+  "documentation_requirements": ["Keep Markdown documentation current."],
+  "definition_of_done": ["All acceptance checks and final audit pass."],
+  "constraints": ["Supervisor owns git."],
+  "open_questions": [],
+  "orchestration": {
+    "supervisor": {"agent": "codex", "model": null, "driver": null},
+    "worker": {"agent": "hermes", "model": "configured-local-model", "driver": "hermes_acp"},
+    "critic": {"agent": "claude", "model": null, "driver": "claude_code"},
+    "max_attempts": 3
+  },
+  "tasks": [{
+    "id": "task-001",
+    "title": "Create verified artifact",
+    "objective": "Create RESULT.md.",
+    "acceptance_criteria": ["RESULT.md exists."],
+    "verification_commands": ["python -c \"from pathlib import Path; assert Path('RESULT.md').exists()\""],
+    "allowed_paths": ["RESULT.md"],
+    "non_goals": ["Do not change unrelated files."],
+    "depends_on": [],
+    "priority": 0
+  }]
+}

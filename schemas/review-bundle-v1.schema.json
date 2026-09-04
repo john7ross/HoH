@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoh.local/schemas/review-bundle-v1.schema.json",
+  "title": "HoH external verifier review bundle v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "protocol_version",
+    "message_type",
+    "bundle_id",
+    "created_at_utc",
+    "repository",
+    "task",
+    "scope",
+    "artifact",
+    "verification",
+    "authority",
+    "integrity"
+  ],
+  "properties": {
+    "protocol": {"const": "hoh.protocol"},
+    "protocol_version": {"const": "1.0"},
+    "message_type": {"const": "verifier.review_bundle"},
+    "bundle_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "commit", "parent_commit"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "parent_commit": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "task": {"$ref": "#/$defs/task"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed_paths", "non_goals", "changed_files"],
+      "properties": {
+        "allowed_paths": {"type": "array", "items": {"type": "string"}},
+        "non_goals": {"type": "array", "items": {"type": "string"}},
+        "changed_files": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract", "commit", "patch_sha256", "patch_text"],
+      "properties": {
+        "contract": {"const": "git_commit_diff"},
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "patch_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "patch_text": {"type": "string"}
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run", "pre_apply_ok", "post_apply_ok", "commands_ok", "command_results"],
+      "properties": {
+        "run": {"type": "object"},
+        "pre_apply_ok": {"type": "boolean"},
+        "post_apply_ok": {"type": "boolean"},
+        "commands_ok": {"type": "boolean"},
+        "command_results": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "worker",
+        "verifier",
+        "supervisor",
+        "worker_commit_allowed",
+        "worker_merge_allowed",
+        "verifier_commit_allowed",
+        "verifier_merge_allowed"
+      ],
+      "properties": {
+        "worker": {"type": "array", "items": {"type": "string"}},
+        "verifier": {"type": "array", "items": {"type": "string"}},
+        "supervisor": {"type": "array", "items": {"type": "string"}},
+        "worker_commit_allowed": {"const": false},
+        "worker_merge_allowed": {"const": false},
+        "verifier_commit_allowed": {"const": false},
+        "verifier_merge_allowed": {"const": false}
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "payload_sha256"],
+      "properties": {
+        "algorithm": {"const": "sha256"},
+        "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  },
+  "$defs": {
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "objective",
+        "acceptance_criteria",
+        "verification_commands",
+        "allowed_paths",
+        "non_goals"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "objective": {"type": "string", "minLength": 1},
+        "acceptance_criteria": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "verification_commands": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1},
+        "allowed_paths": {"type": "array", "items": {"type": "string"}},
+        "non_goals": {"type": "array", "items": {"type": "string"}},
+        "depends_on": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "priority": {"type": "integer"}
+      }
+    }
+  }
+}

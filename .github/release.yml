@@ -1,0 +1,20 @@
+changelog:
+  categories:
+    - title: "User-facing changes"
+      labels:
+        - "feature"
+        - "enhancement"
+    - title: "Fixes"
+      labels:
+        - "bug"
+        - "fix"
+    - title: "Packaging and maintenance"
+      labels:
+        - "packaging"
+        - "documentation"
+        - "dependencies"
+  exclude:
+    labels:
+      - "skip-changelog"
+    authors:
+      - "dependabot[bot]"

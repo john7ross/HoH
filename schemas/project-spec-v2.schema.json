@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoh.local/schemas/project-spec-v2.schema.json",
+  "title": "HoH customer brief project spec v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["spec_version", "id", "title", "goal", "customer", "business_requirements", "definition_of_done", "orchestration", "tasks"],
+  "properties": {
+    "spec_version": {"const": "2.0"},
+    "id": {"type": "string", "minLength": 1},
+    "title": {"type": "string", "minLength": 1},
+    "goal": {"type": "string", "minLength": 1},
+    "customer": {"type": "string", "minLength": 1},
+    "business_requirements": {"$ref": "#/$defs/nonEmptyStrings"},
+    "non_functional_requirements": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "documentation_requirements": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "definition_of_done": {"$ref": "#/$defs/nonEmptyStrings"},
+    "constraints": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "open_questions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "orchestration": {
+      "type": "object", "additionalProperties": false,
+      "required": ["supervisor", "worker", "critic", "max_attempts"],
+      "properties": {
+        "supervisor": {"$ref": "#/$defs/role"},
+        "worker": {"$ref": "#/$defs/role"},
+        "critic": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/role"}]},
+        "max_attempts": {"type": "integer", "minimum": 1}
+      }
+    },
+    "tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/task"}}
+  },
+  "$defs": {
+    "nonEmptyStrings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "role": {
+      "type": "object", "additionalProperties": false, "required": ["agent"],
+      "properties": {"agent": {"type": "string", "minLength": 1}, "model": {"type": ["string", "null"], "minLength": 1}, "driver": {"type": ["string", "null"], "minLength": 1}}
+    },
+    "task": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "title", "objective", "acceptance_criteria", "verification_commands"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "title": {"type": "string", "minLength": 1}, "objective": {"type": "string", "minLength": 1},
+        "acceptance_criteria": {"$ref": "#/$defs/nonEmptyStrings"}, "verification_commands": {"$ref": "#/$defs/nonEmptyStrings"},
+        "allowed_paths": {"type": "array", "items": {"type": "string"}}, "non_goals": {"type": "array", "items": {"type": "string"}},
+        "depends_on": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "priority": {"type": "integer", "default": 0}
+      }
+    }
+  }
+}

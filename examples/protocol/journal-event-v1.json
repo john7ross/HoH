@@ -1,0 +1,14 @@
+{
+  "journal_version": "1.0",
+  "event_id": "example-event-001",
+  "created_at_utc": "2026-01-01T00:00:00+00:00",
+  "event_type": "interaction",
+  "actor": "supervisor",
+  "recipient": "worker",
+  "action": "worker.task_dispatched",
+  "content": {"task_id": "task-001", "objective": "Create RESULT.md."},
+  "metadata": {"transport": "adapter"},
+  "task_id": "task-001",
+  "run_id": null,
+  "correlation_id": "job-001"
+}

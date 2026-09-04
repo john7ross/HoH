@@ -1,0 +1,245 @@
+worker_trust_level = "patch_only"
+forbidden_paths = [".git/"]
+require_tests = true
+
+[scheduler]
+# Worker preparation may overlap only for dependency-ready tasks with non-overlapping allowed_paths.
+# Supervisor verification, canonical patch application, commits, and state writes remain serialized.
+max_parallel_tasks = 1
+
+[coordination]
+# Short state transactions and longer canonical Git actions use separate OS-backed leases.
+state_lock_timeout_seconds = 5
+execution_lock_timeout_seconds = 5
+poll_interval_seconds = 0.05
+
+[audit]
+# Built-in, offline analyzers. Configured entry points make unused-file reachability strict.
+language_analyzers = ["python", "javascript", "typescript"]
+entry_points = []
+exclude_paths = []
+fail_on_unavailable = true
+
+[supervisor_model]
+provider = "stub"
+model = "supervisor-stub"
+# Production: provider = "openai", model = "<approved model>", api_key_env = "OPENAI_API_KEY"
+timeout_seconds = 60
+max_retries = 2
+max_output_tokens = 8192
+
+[supervisor]
+# "model_json" uses [supervisor_model]. "acp" and "command_json" select an
+# out-of-process harness while HoH retains Git and state authority.
+driver = "model_json"
+timeout_seconds = 300
+
+[supervisor.mcp]
+# Supervisor is planning-only by default: no MCP servers and every ACP permission is rejected.
+permission_mode = "reject"
+allowed_tool_kinds = []
+
+[verifier_model]
+provider = "stub"
+model = "verifier-stub"
+# Used by semantic verification and by [critic] driver="model_json".
+# Production: provider = "deepseek", model = "<approved model>", api_key_env = "DEEPSEEK_API_KEY"
+timeout_seconds = 60
+max_retries = 2
+max_output_tokens = 8192
+
+[three_head]
+# Legacy fallback only. Project-spec v2 generates .hoh/role-profile.json from the customer brief
+# and overrides these role defaults automatically.
+mode = "manual"
+max_attempts = 3
+
+[three_head.roles.logic]
+identity = "external-supervisor"
+provider = "external"
+model = "supervisor-agent"
+
+[three_head.roles.worker]
+identity = "hermes-worker"
+provider = "hermes"
+model = "configured-hermes-model"
+
+[three_head.roles.critic]
+identity = "external-critic"
+provider = "external"
+model = "critic-agent"
+
+[runtime]
+require_embedded_python = true
+embedded_python_path = "runtime/python/python.exe"
+wheels_path = "vendor/wheels"
+
+[worker]
+# Canonical field. Legacy `type` is accepted as a compatibility alias.
+driver = "hermes_acp"
+command = "hermes"
+args = ["acp"]
+timeout_seconds = 300
+
+[worker.mcp]
+# Compatibility default for the isolated Worker. Narrow this list for least privilege.
+permission_mode = "allow_once"
+allowed_tool_kinds = ["read", "edit", "delete", "move", "search", "execute", "think", "fetch", "switch_mode", "other"]
+
+# Example remote MCP server. The token value stays in MCP_DOCS_TOKEN; only its name is saved.
+# [[worker.mcp.servers]]
+# name = "project-docs"
+# transport = "http"
+# url = "https://mcp.example.com/api"
+# [[worker.mcp.servers.headers]]
+# name = "Authorization"
+# source_env = "MCP_DOCS_TOKEN"
+
+# Example stdio MCP server. ACP requires an absolute executable on the wire; HoH resolves PATH.
+# [[worker.mcp.servers]]
+# name = "local-tools"
+# transport = "stdio"
+# command = "my-mcp-server"
+# args = ["--stdio"]
+# [[worker.mcp.servers.environment]]
+# name = "API_KEY"
+# source_env = "MY_MCP_API_KEY"
+
+[worker.capabilities]
+task_transport = "acp_stdio"
+artifact_contract = "worktree_diff"
+requires_isolated_worktree = true
+supports_subagents = false
+
+[critic]
+# "manual" keeps the JSON export/import handoff. "model_json" uses [verifier_model]
+# directly. "command_json" accepts a read-only CLI that reads the review prompt from
+# stdin and writes judgment JSON to stdout.
+driver = "manual"
+command = "claude"
+args = []
+timeout_seconds = 300
+# max_budget_usd = 2.0
+
+[critic.mcp]
+# Critic reviews immutable evidence and is tool-free by default.
+permission_mode = "reject"
+allowed_tool_kinds = []
+
+# Generic CLI worker alternative:
+# [worker]
+# driver = "command"
+# command = "python"
+# args = ["path/to/worker_cli.py"]
+# timeout_seconds = 300
+#
+# [worker.capabilities]
+# task_transport = "stdin_prompt"
+# artifact_contract = "worktree_diff"
+# requires_isolated_worktree = true
+# supports_subagents = false
+
+# Named Claude Code worker alternative. HoH owns all safety flags; keep args empty.
+# [worker]
+# driver = "claude_code"
+# command = "claude"
+# args = []
+# model = "sonnet"
+# timeout_seconds = 300
+# max_budget_usd = 2.0
+#
+# [worker.capabilities]
+# task_transport = "stdin_prompt"
+# artifact_contract = "worktree_diff"
+# requires_isolated_worktree = true
+# supports_subagents = false
+
+# Named OpenClaw worker alternative. An explicit model is required.
+# [worker]
+# driver = "openclaw"
+# command = "openclaw"
+# args = []
+# model = "openai/gpt-5.6-sol"
+# thinking = "high"
+# timeout_seconds = 300
+#
+# [worker.capabilities]
+# task_transport = "stdin_prompt"
+# artifact_contract = "worktree_diff"
+# requires_isolated_worktree = true
+# supports_subagents = false
+
+[telegram]
+enabled = false
+bot_token_env = "HOH_TELEGRAM_BOT_TOKEN"
+chat_id_env = "HOH_TELEGRAM_CHAT_ID"
+user_id_env = "HOH_TELEGRAM_USER_ID"
+
+[[agents]]
+name = "codex"
+command = "npx"
+args = ["-y", "@agentclientprotocol/codex-acp@1.7.0"]
+supervisor_driver = "acp"
+worker_driver = "acp"
+critic_driver = "acp"
+
+[[agents]]
+name = "claude"
+command = "claude"
+worker_driver = "claude_code"
+critic_driver = "claude_code"
+
+[[agents]]
+name = "hermes"
+command = "hermes"
+args = ["acp"]
+supervisor_driver = "acp"
+worker_driver = "hermes_acp"
+
+[[agents]]
+name = "openclaw"
+command = "openclaw"
+worker_driver = "openclaw"
+
+[[agents]]
+# Aider is a declarative one-shot Worker. HoH owns prompt placement and appends
+# all required safety flags; provider keys stay in the process environment.
+name = "aider"
+command = "aider"
+worker_driver = "process"
+
+[agents.worker_process_profile]
+profile_id = "aider"
+prompt_transport = "file"
+prompt_argument = "--message-file"
+required_args = ["--no-stream", "--yes", "--no-auto-commits", "--no-dirty-commits"]
+forbidden_args = ["--stream", "--auto-commits", "--dirty-commits", "--commit", "--message", "--msg", "-m"]
+model_argument = "--model"
+version_args = ["--version"]
+
+# Completely new agents need no HoH code change when they can consume a prompt
+# on stdin, or can be described by a worker_process_profile, and edit their current directory:
+# [[agents]]
+# name = "my-agent"
+# command = "my-agent-cli"
+# args = ["run"]
+# supervisor_driver = "command_json"
+# worker_driver = "command"
+# critic_driver = "command_json"
+
+# Remote A2A v1 agent. The credential value is never stored here; only its environment name.
+# [[a2a_agents]]
+# name = "remote-review-service"
+# card_url = "https://agents.example.com/reviewer/.well-known/agent-card.json"
+# roles = ["critic"]
+# auth_kind = "bearer"
+# credential_env = "REMOTE_REVIEW_TOKEN"
+# timeout_seconds = 300
+# poll_interval_seconds = 1
+
+# Optional local model endpoint example. Uncomment only when the endpoint is running.
+# [[local_models]]
+# name = "qwen-llama-cpp"
+# base_url = "http://127.0.0.1:8080"
+# model = "qwen"
+# protocol = "openai_compatible"

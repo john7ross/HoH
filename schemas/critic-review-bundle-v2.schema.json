@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoh.local/schemas/critic-review-bundle-v2.schema.json",
+  "title": "HoH three-head critic review bundle v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "protocol_version", "message_type", "bundle_id", "created_at_utc", "repository", "task", "scope", "artifact", "verification", "authority", "three_head", "integrity"],
+  "properties": {
+    "protocol": {"const": "hoh.protocol"},
+    "protocol_version": {"const": "2.0"},
+    "message_type": {"const": "critic.review_bundle"},
+    "bundle_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "repository": {"type": "object"},
+    "task": {"type": "object"},
+    "scope": {"type": "object"},
+    "artifact": {
+      "type": "object",
+      "required": ["contract", "commit", "patch_sha256", "patch_text"],
+      "properties": {
+        "contract": {"const": "git_commit_diff"},
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "patch_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "patch_text": {"type": "string"}
+      }
+    },
+    "verification": {"type": "object"},
+    "authority": {
+      "type": "object",
+      "required": ["worker_commit_allowed", "worker_merge_allowed", "verifier_commit_allowed", "verifier_merge_allowed"],
+      "properties": {
+        "worker_commit_allowed": {"const": false},
+        "worker_merge_allowed": {"const": false},
+        "verifier_commit_allowed": {"const": false},
+        "verifier_merge_allowed": {"const": false}
+      }
+    },
+    "three_head": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "attempt", "max_attempts", "roles", "correction_context", "closure_policy"],
+      "properties": {
+        "mode": {"const": "required"},
+        "attempt": {"type": "integer", "minimum": 1},
+        "max_attempts": {"type": "integer", "minimum": 1},
+        "roles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["logic", "worker", "critic"],
+          "properties": {
+            "logic": {"$ref": "#/$defs/role"},
+            "worker": {"$ref": "#/$defs/role"},
+            "critic": {"$ref": "#/$defs/role"}
+          }
+        },
+        "correction_context": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["decision_id", "instructions"],
+          "properties": {
+            "decision_id": {"type": ["string", "null"]},
+            "instructions": {"type": "array", "items": {"type": "string", "minLength": 1}}
+          }
+        },
+        "closure_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["critic_approval_required", "supervisor_owns_git", "supervisor_confirms_rework"],
+          "properties": {
+            "critic_approval_required": {"const": true},
+            "supervisor_owns_git": {"const": true},
+            "supervisor_confirms_rework": {"const": true}
+          }
+        }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "payload_sha256"],
+      "properties": {
+        "algorithm": {"const": "sha256"},
+        "payload_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  },
+  "$defs": {
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "provider", "model"],
+      "properties": {
+        "identity": {"type": "string", "minLength": 1},
+        "provider": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

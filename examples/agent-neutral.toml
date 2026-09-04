@@ -1,0 +1,53 @@
+[worker]
+driver = "command"
+command = "my-worker-cli"
+args = ["run"]
+timeout_seconds = 300
+
+[critic]
+driver = "command_json"
+command = "my-critic-cli"
+args = ["review"]
+timeout_seconds = 300
+
+[three_head]
+mode = "required"
+max_attempts = 3
+
+[three_head.roles.logic]
+identity = "supervisor-session"
+provider = "operator-selected"
+model = "supervisor-model"
+
+[three_head.roles.worker]
+identity = "worker-session"
+provider = "custom-agent"
+model = "worker-model"
+
+[three_head.roles.critic]
+identity = "critic-session"
+provider = "custom-agent"
+model = "critic-model"
+
+[[agents]]
+name = "my-worker"
+command = "my-worker-cli"
+args = ["run"]
+worker_driver = "command"
+
+[[agents]]
+name = "my-critic"
+command = "my-critic-cli"
+args = ["review"]
+worker_driver = "command"
+critic_driver = "command_json"
+
+# A remote service can independently fill any subset of the three roles.
+[[a2a_agents]]
+name = "remote-critic"
+card_url = "https://agents.example.com/critic/.well-known/agent-card.json"
+roles = ["critic"]
+auth_kind = "bearer"
+credential_env = "REMOTE_CRITIC_TOKEN"
+timeout_seconds = 300
+poll_interval_seconds = 1

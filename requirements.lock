@@ -1,0 +1,4 @@
+# HoH portable runtime dependency lock.
+#
+# Runtime dependencies must be pinned here before they are added to pyproject.toml.
+# The current runtime intentionally has no third-party package dependencies.

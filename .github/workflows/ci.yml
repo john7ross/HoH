@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Linux Tk dependency
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes python3-tk
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests
+        env:
+          PYTHONPATH: src
+
+      - name: Compile source and tests
+        run: python -m compileall -q src tests
+        env:
+          PYTHONPATH: src
+
+      - name: Run protocol conformance
+        run: python -m llm_harness protocol-conformance --distribution-root . --json
+        env:
+          PYTHONPATH: src
+
+      - name: Run readiness audit
+        run: >-
+          python -m llm_harness audit --project-root .
+          --check "python -m unittest discover -s tests"
+          --check "python -m compileall -q src tests"
+          --check "python -m llm_harness protocol-conformance --distribution-root . --json"
+          --markdown
+        env:
+          PYTHONPATH: src

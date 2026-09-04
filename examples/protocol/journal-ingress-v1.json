@@ -1,0 +1,12 @@
+{
+  "event_version": "1.0",
+  "event_type": "interaction",
+  "actor": "supervisor",
+  "recipient": "customer",
+  "action": "brief.role_question",
+  "content": {"question": "Нужен ли независимый Critic?"},
+  "metadata": {"channel": "agent-ui"},
+  "task_id": null,
+  "run_id": null,
+  "correlation_id": "brief-customer-project"
+}

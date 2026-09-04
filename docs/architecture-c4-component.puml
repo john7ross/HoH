@@ -1,0 +1,157 @@
+@startuml hoh-c4-component
+' C4 component diagram. Uses PlantUML's bundled C4 standard library; no network includes.
+!include <C4/C4_Component>
+
+title HoH - C4 component view
+LAYOUT_TOP_DOWN()
+
+Person(customer, "Customer", "States the goal, answers clarifications, approves, receives readiness reports")
+
+System_Boundary(hoh, "HoH control plane") {
+
+  Container_Boundary(front, "Front ends") {
+    Component(gui, "Desktop GUI", "Tkinter/ttk, RU/EN, light/dark", "Install and authenticate agents, choose the three roles, converse with the Supervisor, operate the queue")
+    Component(gui_service, "GUI application service", "Structured Python API", "Atomic configuration and role profiles, session credential injection, OAuth login, guarded setup and operations")
+    Component(server, "Headless control API", "Authenticated HTTP, optional TLS", "Workspace summaries, Supervisor chat and planning, queue execution and metrics without a desktop")
+    Component(operator, "Operator command handler", "Deterministic command layer", "status, queue, stale, retry, recover, continue and stop, independent of transport")
+    Component(telegram, "Telegram notifier", "Stub or Bot API", "Clarification questions, readiness and blocking notifications, authenticated inbound commands")
+    Component(desktop_notify, "Desktop notifier", "Native OS command", "Local completion and blocker summaries, with delivery evidence outside project git")
+  }
+
+  Container_Boundary(core, "Control plane") {
+    Component(protocol, "Protocol CLI", "Versioned JSON contract", "plan, queue, status, history, audit, review export and decision import")
+    Component(loop, "Loop engine", "Deterministic state machine", "Dispatches atomic tasks, tracks attempts, controls transitions, records evidence")
+    Component(scheduler, "DAG scheduler", "Deterministic resource policy", "Validates the DAG and forms bounded batches with non-overlapping write scopes")
+    Component(task_loader, "Task loader", "JSON / Markdown", "Atomic work items with acceptance criteria, verification commands, allowed paths and non-goals")
+    Component(role_profile, "Role profile materializer", "Project spec v2", "Turns the chosen agents, models, Critic and attempt bound into a runtime profile")
+  }
+
+  Container_Boundary(roles, "Role transports") {
+    Component(chat, "Supervisor conversation", "ACP / model JSON / command JSON", "Private multi-turn clarification outside git, tools denied, transcript handed over only on confirmation")
+    Component(sup_adapter, "Supervisor adapter", "model_json / command_json / ACP", "Schema-constrained plans in a process boundary with no repository authority")
+    Component(worker_adapter, "Worker adapter", "ACP / command / process / bundled", "One constrained task in an isolated worktree; collects only the declared artifact contract")
+    Component(critic_adapter, "Critic adapter", "model_json / ACP / command_json / manual", "Read-only judgment over immutable evidence")
+    Component(driver_registry, "Driver registry", "hoh.driver v1 + ACP Registry cache", "Resolves explicit drivers and pinned launches without guessing from product names")
+    Component(profiles, "Process profiles", "Declarative config", "Prompt transport, mandatory safety flags, forbidden flags, model routing and version probes")
+    Component(installer, "Managed agent installer", "npm / uv / HTTPS archive", "Atomic user-scope installs, hash verification, bounded extraction, receipts, owned-target removal")
+    Component(agent_auth, "Agent authentication", "ACP authMethods + vendor CLI", "Reads declared login methods and starts vendor login; credentials never enter HoH storage")
+    Component(matrix, "Agent matrix", "What is installed here", "Which agents are present on this machine, their version, and the roles their driver covers")
+  }
+
+  Container_Boundary(remote, "Remote agents") {
+    Component(a2a, "A2A gateway", "A2A v1 JSON-RPC + SSE + push", "Agent Card discovery, bearer/API-key/OAuth2/OIDC, stream, subscribe, poll, cancel, bounded artifacts, redacted errors")
+    Component(oauth, "OAuth token store", "DPAPI / 0600 file", "Access and refresh tokens outside project git")
+    Component(push, "A2A push receiver", "Authenticated HTTP", "Bounded bearer-authenticated task, message, status and artifact updates")
+  }
+
+  Container_Boundary(gates, "Gates") {
+    Component(policy, "Policy verifier", "Deterministic gate", "Patch scope, forbidden paths, acceptance inputs and verification results, before any commit")
+    Component(git_gate, "Git gate", "Worktree manager", "Isolated attempts, rejects worker-owned HEAD movement, applies patches, commits, rolls back")
+    Component(review, "Review gateway", "JSON Schema + SHA-256", "Exports exact commit evidence, validates decisions, enforces bounded correction transitions")
+    Component(rollback, "Rollback policy", "Exact-commit state machine", "Plans DAG impact, verifies a reverse patch in isolation, records append-only evidence")
+    Component(docs_gate, "Documentation gate", "Markdown audit", "README, architecture, diagrams, setup and operation notes, stale-documentation risk")
+  }
+
+  Container_Boundary(sched, "Scheduling") {
+    Component(workspaces, "Workspace registry", "User-scoped JSON + lease", "Several git projects and their interval policies, without copying project-local queue state")
+    Component(background, "Background scheduler", "Task Scheduler / systemd user / launchd", "Finds due projects and invokes the guarded queue loop; per-project locks reject overlap")
+  }
+
+  ComponentDb(store, "State store", "JSON / JSONL", "Queue, runs, audits, review bundles, decisions, operator events, commits and errors, outside the canonical repository")
+  ComponentDb(journal, "Interaction journal", "Redacted JSONL", "Routed messages, adapter frames, exposed tool calls, artifacts, commands, decisions and transitions")
+}
+
+System_Ext(supervisor, "Supervisor harness or model", "An ACP agent, a structured model, or a command JSON process. No repository authority.")
+System_Ext(worker, "Coding-agent harness", "Any conforming ACP Registry agent, or an explicitly configured headless process")
+System_Ext(critic, "External Critic", "An independent role that reads immutable evidence and returns approve, reject or escalate")
+System_Ext(remote_agent, "Remote A2A agent", "A v1 JSON-RPC Agent Card endpoint permitted for one or more roles")
+System_Ext(repo, "Project git repository", "Canonical project history")
+
+Rel(customer, gui, "Configures the project and all three roles")
+Rel(customer, server, "Operates registered projects over a bearer-authenticated API")
+Rel(customer, supervisor, "Briefs, clarifies, approves")
+Rel(telegram, customer, "Delivers messages")
+Rel(desktop_notify, customer, "Shows an operating-system notification")
+
+Rel(gui, gui_service, "Structured application calls")
+Rel(gui, chat, "Task and clarification messages")
+Rel(gui, workspaces, "Registers projects and edits interval policies")
+Rel(gui_service, role_profile, "Validates and atomically saves explicit role selections")
+Rel(gui_service, driver_registry, "Reads the shared role and Registry catalog")
+Rel(gui_service, installer, "Installs, updates and removes Registry distributions")
+Rel(gui_service, agent_auth, "Inspects and starts login")
+Rel(gui_service, a2a, "Tests project connections")
+Rel(gui_service, oauth, "Persists and refreshes grants")
+Rel(gui_service, protocol, "Starts bounded operational commands")
+Rel(gui_service, store, "Reads structured queue and Supervisor status")
+
+Rel(server, workspaces, "Reads and registers project roots")
+Rel(server, chat, "Continues chat and confirms planning")
+Rel(server, protocol, "Runs the guarded queue services")
+Rel(server, store, "Reads queue and metrics evidence")
+
+Rel(telegram, operator, "Forwards authenticated inbound commands")
+Rel(operator, loop, "Applies explicit queue decisions")
+
+Rel(chat, sup_adapter, "Uses the selected Supervisor transport")
+Rel(chat, store, "Persists private chat outside canonical git")
+Rel(chat, task_loader, "Hands confirmed requirements to planning")
+
+Rel(protocol, sup_adapter, "Requests schema-constrained planning")
+Rel(protocol, task_loader, "Loads project and task files")
+Rel(protocol, loop, "Queues work and reads execution state")
+Rel(protocol, review, "Exports a bundle or imports a decision")
+Rel(protocol, rollback, "Plans or confirms an exact rollback")
+Rel(protocol, journal, "Appends redacted protocol events")
+
+Rel(task_loader, role_profile, "Materializes the role choices")
+Rel(role_profile, loop, "Effective Supervisor, Worker and Critic policy")
+Rel(role_profile, driver_registry, "Selects explicit driver ids")
+Rel(role_profile, profiles, "Materializes the selected declarative Worker profile")
+Rel(role_profile, matrix, "Role, agent, driver and model identity")
+
+Rel(driver_registry, sup_adapter, "Versioned runtime contract")
+Rel(driver_registry, worker_adapter, "Versioned runtime contract")
+Rel(driver_registry, critic_adapter, "Versioned runtime contract")
+Rel(driver_registry, installer, "Prefers exact managed launch receipts")
+Rel(driver_registry, matrix, "Transport and discovered runtime version")
+Rel(profiles, worker_adapter, "Prompt placement and enforced invocation policy")
+
+Rel(store, scheduler, "Durable task lifecycle state")
+Rel(scheduler, loop, "An ordered, non-conflicting batch")
+Rel(loop, worker_adapter, "Dispatches one constrained task")
+Rel(worker_adapter, loop, "Patch, logs and metadata")
+Rel(loop, policy, "Requests deterministic patch and command checks")
+Rel(loop, store, "Writes trace evidence")
+Rel(loop, journal, "Appends interactions, tools and transitions")
+
+Rel(policy, git_gate, "Allows or blocks the supervisor-owned commit")
+Rel(git_gate, repo, "Creates final supervisor-owned commits")
+Rel(rollback, git_gate, "Builds and applies a verified reverse patch")
+Rel(rollback, store, "Writes rolled_back state and an immutable record")
+Rel(store, rollback, "Run, task, DAG and prior rollback evidence")
+Rel(review, critic_adapter, "Provides the immutable bundle")
+Rel(critic_adapter, review, "Returns judgment for trusted-field normalization")
+Rel(review, store, "Appends bundle and decision evidence")
+
+Rel(workspaces, store, "Aggregates each project's real queue, read-only")
+Rel(background, workspaces, "Claims due schedules and records outcomes")
+Rel(background, protocol, "Invokes the queue loop without duplicating orchestration")
+Rel(background, desktop_notify, "Sends the local run summary")
+Rel(background, telegram, "Optionally sends the project summary")
+
+Rel(sup_adapter, supervisor, "Invokes the selected harness or model")
+Rel(worker_adapter, worker, "Talks through the configured transport")
+Rel(critic_adapter, critic, "Invokes the configured Critic transport")
+Rel(supervisor, docs_gate, "Runs the final documentation audit")
+Rel(supervisor, telegram, "Sends questions and readiness notifications")
+
+Rel(sup_adapter, a2a, "Plans through a remote Supervisor")
+Rel(worker_adapter, a2a, "Bounded allowed-file snapshot out, diff back")
+Rel(critic_adapter, a2a, "Immutable evidence out, judgment back")
+Rel(a2a, oauth, "Loads cached grants")
+Rel(a2a, push, "Registers the callback and consumes updates")
+Rel(a2a, remote_agent, "HTTPS JSON-RPC v1 and SSE")
+Rel(remote_agent, push, "Authenticated StreamResponse updates")
+
+@enduml

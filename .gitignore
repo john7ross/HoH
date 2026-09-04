@@ -1,0 +1,38 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+graphify-out/
+dist/
+build/
+*.egg-info/
+.venv/
+venv/
+runtime/python/
+runtime/site-packages/
+vendor/wheels/*.whl
+harness.toml
+hoh-env.local.ps1
+hoh-env.local.sh
+
+# Local secrets and credentials (keep only safe examples in the repository)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+
+# Runtime state and diagnostics
+*.log
+.hoh-state/
+.hoh-leases/
+
+# Operating-system and editor metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

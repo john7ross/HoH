@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoh.local/schemas/journal-event-v1.schema.json",
+  "title": "HoH redacted interaction journal event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["journal_version", "event_id", "created_at_utc", "event_type", "actor", "recipient", "action", "content", "metadata", "task_id", "run_id", "correlation_id"],
+  "properties": {
+    "journal_version": {"const": "1.0"},
+    "event_id": {"type": "string", "minLength": 1},
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "event_type": {"enum": ["interaction", "tool_call", "tool_result", "state_transition", "artifact", "decision"]},
+    "actor": {"type": "string", "minLength": 1},
+    "recipient": {"type": ["string", "null"]},
+    "action": {"type": "string", "minLength": 1},
+    "content": {},
+    "metadata": {"type": "object"},
+    "task_id": {"type": ["string", "null"]},
+    "run_id": {"type": ["string", "null"]},
+    "correlation_id": {"type": ["string", "null"]}
+  }
+}

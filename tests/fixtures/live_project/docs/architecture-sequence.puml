@@ -1,0 +1,11 @@
+@startuml hoh-sequence
+title Billing parser - splitting one line
+
+actor Caller
+participant "tokens.py" as T
+
+Caller -> T : split_line(line)
+T -> T : Walk the line, honouring quoted fields
+T --> Caller : fields
+
+@enduml

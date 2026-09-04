@@ -1,0 +1,23 @@
+{
+  "protocol": "hoh.protocol",
+  "protocol_version": "2.0",
+  "message_type": "critic.decision",
+  "decision_id": "critic-reject-example",
+  "bundle_id": "three-head-example-run",
+  "bundle_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "critic": {"identity": "external-critic", "kind": "agent"},
+  "decision": "reject",
+  "summary": "A required edge case is not covered.",
+  "findings": [{"code": "EDGE_CASE", "severity": "error", "message": "The empty-input case is not verified."}],
+  "correction_brief": {
+    "rationale": "The delivered evidence does not prove the empty-input acceptance criterion.",
+    "instructions": ["Implement the empty-input behavior described by the original acceptance criterion."],
+    "validation_focus": ["Add and run a deterministic empty-input check."]
+  },
+  "escalation": null,
+  "created_at_utc": "2026-01-01T00:00:00+00:00",
+  "attestation": {
+    "reviewed_commit": "1111111111111111111111111111111111111111",
+    "reviewed_patch_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoh.local/schemas/critic-decision-v2.schema.json",
+  "title": "HoH three-head critic decision v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "protocol_version", "message_type", "decision_id", "bundle_id", "bundle_sha256", "critic", "decision", "summary", "findings", "correction_brief", "escalation", "created_at_utc", "attestation"],
+  "properties": {
+    "protocol": {"const": "hoh.protocol"},
+    "protocol_version": {"const": "2.0"},
+    "message_type": {"const": "critic.decision"},
+    "decision_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "bundle_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "critic": {
+      "type": "object", "additionalProperties": false, "required": ["identity", "kind"],
+      "properties": {"identity": {"type": "string", "minLength": 1}, "kind": {"enum": ["agent", "human", "service"]}}
+    },
+    "decision": {"enum": ["approve", "reject", "escalate"]},
+    "summary": {"type": "string", "minLength": 1},
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+    "correction_brief": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/correction"}]},
+    "escalation": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/escalation"}]},
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "attestation": {
+      "type": "object", "additionalProperties": false, "required": ["reviewed_commit", "reviewed_patch_sha256"],
+      "properties": {"reviewed_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "reviewed_patch_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object", "additionalProperties": false, "required": ["code", "severity", "message"],
+      "properties": {"code": {"type": "string", "minLength": 1}, "severity": {"enum": ["info", "warning", "error", "blocker"]}, "message": {"type": "string", "minLength": 1}, "path": {"type": ["string", "null"]}}
+    },
+    "correction": {
+      "type": "object", "additionalProperties": false, "required": ["rationale", "instructions", "validation_focus"],
+      "properties": {"rationale": {"type": "string", "minLength": 1}, "instructions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}, "validation_focus": {"type": "array", "items": {"type": "string", "minLength": 1}}}
+    },
+    "escalation": {
+      "type": "object", "additionalProperties": false, "required": ["reason", "question", "options"],
+      "properties": {"reason": {"type": "string", "minLength": 1}, "question": {"type": "string", "minLength": 1}, "options": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 1}}}
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"decision": {"const": "approve"}}}, "then": {"properties": {"findings": {"maxItems": 0}, "correction_brief": {"type": "null"}, "escalation": {"type": "null"}}}},
+    {"if": {"properties": {"decision": {"const": "reject"}}}, "then": {"properties": {"findings": {"minItems": 1}, "correction_brief": {"$ref": "#/$defs/correction"}, "escalation": {"type": "null"}}}},
+    {"if": {"properties": {"decision": {"const": "escalate"}}}, "then": {"properties": {"findings": {"minItems": 1}, "correction_brief": {"type": "null"}, "escalation": {"$ref": "#/$defs/escalation"}}}}
+  ]
+}

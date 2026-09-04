@@ -1,0 +1,83 @@
+# Releases are published by hand, from packages built and installed on real
+# machines rather than on a runner. This workflow exists to prove the packaging
+# scripts still run on a clean checkout of each operating system, so it never
+# fires on its own and never touches a release: it builds, and leaves the
+# artifacts on the run. A tag push used to start it, which meant three builds
+# ran for a release that was already published.
+name: Build native packages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows Setup
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+      - name: Prepare bundled runtime and build Setup
+        shell: pwsh
+        run: |
+          $pythonSource = Split-Path (Get-Command python).Source
+          .\scripts\bootstrap-runtime.ps1 -PythonSource $pythonSource -BuildWheelhouse -InstallOffline
+          .\scripts\package-windows-installer.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HoH-windows
+          path: |
+            dist/HoH-Setup-*.exe
+            dist/HoH-Setup-*.manifest.json
+
+  linux:
+    name: Ubuntu/Debian DEB
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Debian packaging and Tk dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes dpkg-dev python3-tk
+      - name: Fetch the interpreter the package ships
+        run: bash scripts/bootstrap-runtime.sh
+      - name: Build DEB
+        run: bash scripts/package-deb.sh
+        env:
+          PYTHONPATH: src
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HoH-linux
+          path: |
+            dist/hoh_*.deb
+            dist/hoh_*.deb.sha256
+
+  macos:
+    name: macOS DMG
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Python/Tk build tools
+        run: |
+          brew install python@3.12 python-tk@3.12
+          echo "$(brew --prefix python@3.12)/bin" >> "$GITHUB_PATH"
+          python3 -m pip install --user --break-system-packages PyInstaller==6.15.0
+      - name: Build DMG
+        run: bash scripts/package-macos.sh
+        env:
+          PYTHONPATH: src
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HoH-macos
+          path: |
+            dist/HoH-*.dmg
+            dist/HoH-*.dmg.sha256

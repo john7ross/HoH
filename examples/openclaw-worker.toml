@@ -1,0 +1,12 @@
+[worker]
+driver = "openclaw"
+command = "openclaw"
+args = []
+model = "openai/gpt-5.6-sol"
+timeout_seconds = 180
+
+[worker.capabilities]
+task_transport = "stdin_prompt"
+artifact_contract = "worktree_diff"
+requires_isolated_worktree = true
+supports_subagents = false

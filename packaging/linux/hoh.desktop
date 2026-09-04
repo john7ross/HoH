@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=HoH
+Comment=Supervisor, Worker and Critic orchestration
+Exec=hoh-gui
+Icon=hoh
+Terminal=false
+Categories=Development;Utility;
+StartupNotify=true

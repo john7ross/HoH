@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoh.local/schemas/role-profile-v2.schema.json",
+  "title": "HoH generated project role profile v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_version", "critic_enabled", "max_attempts", "roles"],
+  "properties": {
+    "profile_version": {"const": "2.0"},
+    "critic_enabled": {"type": "boolean"},
+    "max_attempts": {"type": "integer", "minimum": 1},
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["supervisor", "worker", "critic"],
+      "properties": {
+        "supervisor": {"$ref": "#/$defs/role"},
+        "worker": {"$ref": "#/$defs/role"},
+        "critic": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/role"}]}
+      }
+    }
+  },
+  "$defs": {
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["agent", "model", "driver"],
+      "properties": {
+        "agent": {"type": "string", "minLength": 1},
+        "model": {"type": ["string", "null"], "minLength": 1},
+        "driver": {"type": ["string", "null"], "minLength": 1}
+      }
+    }
+  }
+}

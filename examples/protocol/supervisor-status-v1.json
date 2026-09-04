@@ -1,0 +1,29 @@
+{
+  "protocol": "hoh.protocol",
+  "protocol_version": "1.0",
+  "message_type": "supervisor.status",
+  "ok": true,
+  "generated_at_utc": "2026-01-01T00:00:00+00:00",
+  "data": {
+    "repository": "C:\\projects\\sample",
+    "state_root": "C:\\projects\\.hoh-state\\sample-12345678",
+    "queue": {
+      "queued": 0,
+      "running": 0,
+      "done": 1,
+      "failed": 0,
+      "stale": 0,
+      "stale_task_ids": []
+    },
+    "latest_run": null,
+    "latest_audit": null,
+    "latest_operator_event": null,
+    "reviews": {
+      "bundles": 1,
+      "pending": 0,
+      "approved": 1,
+      "rejected": 0,
+      "latest": null
+    }
+  }
+}

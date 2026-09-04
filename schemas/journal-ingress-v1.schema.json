@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoh.local/schemas/journal-ingress-v1.schema.json",
+  "title": "HoH external role journal ingress v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["event_version", "event_type", "actor", "recipient", "action", "content", "metadata", "task_id", "run_id", "correlation_id"],
+  "properties": {
+    "event_version": {"const": "1.0"},
+    "event_type": {"enum": ["interaction", "tool_call", "tool_result", "state_transition", "artifact", "decision"]},
+    "actor": {"type": "string", "minLength": 1},
+    "recipient": {"type": ["string", "null"]},
+    "action": {"type": "string", "minLength": 1},
+    "content": {},
+    "metadata": {"type": "object"},
+    "task_id": {"type": ["string", "null"]},
+    "run_id": {"type": ["string", "null"]},
+    "correlation_id": {"type": ["string", "null"]}
+  }
+}

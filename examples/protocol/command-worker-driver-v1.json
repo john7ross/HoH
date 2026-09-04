@@ -1,0 +1,13 @@
+{
+  "protocol": "hoh.driver",
+  "protocol_version": "1.0",
+  "driver_id": "command",
+  "role": "worker",
+  "adapter": "command",
+  "task_transport": "stdin_prompt",
+  "artifact_contract": "worktree_diff",
+  "requires_isolated_worktree": true,
+  "supports_subagents": false,
+  "safety_profile": "operator-configured-isolated-worktree",
+  "description": "Universal out-of-process worker: prompt on stdin, repository changes in an isolated worktree."
+}

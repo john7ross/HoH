@@ -1,0 +1,14 @@
+{
+  "kind": "releases",
+  "generated_at_utc": "2026-08-29T00:00:00Z",
+  "artifacts": [
+    {
+      "version": "1.0.0",
+      "platform": "windows-x86_64",
+      "url": "https://example.invalid/HoH-1.0.0-windows-x86_64.zip",
+      "bytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "notes_url": "https://example.invalid/HoH-1.0.0-notes"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoh.local/schemas/verifier-decision-v1.schema.json",
+  "title": "HoH external verifier decision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "protocol_version",
+    "message_type",
+    "decision_id",
+    "bundle_id",
+    "bundle_sha256",
+    "reviewer",
+    "decision",
+    "summary",
+    "findings",
+    "created_at_utc",
+    "attestation"
+  ],
+  "properties": {
+    "protocol": {"const": "hoh.protocol"},
+    "protocol_version": {"const": "1.0"},
+    "message_type": {"const": "verifier.decision"},
+    "decision_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "bundle_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+        "kind": {"enum": ["agent", "human", "service"]}
+      }
+    },
+    "decision": {"enum": ["approve", "reject"]},
+    "summary": {"type": "string", "minLength": 1},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "severity", "message"],
+        "properties": {
+          "code": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+          "severity": {"enum": ["info", "warning", "error", "blocker"]},
+          "message": {"type": "string", "minLength": 1},
+          "path": {"type": ["string", "null"], "minLength": 1}
+        }
+      }
+    },
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "attestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewed_commit", "reviewed_patch_sha256"],
+      "properties": {
+        "reviewed_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "reviewed_patch_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"decision": {"const": "reject"}}},
+      "then": {"properties": {"findings": {"minItems": 1}}}
+    }
+  ]
+}

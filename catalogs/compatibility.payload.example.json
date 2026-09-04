@@ -1,0 +1,17 @@
+{
+  "kind": "compatibility",
+  "generated_at_utc": "2026-08-29T00:00:00Z",
+  "records": [
+    {
+      "agent": "codex",
+      "role": "worker",
+      "driver": "acp",
+      "model": "gpt-5.4",
+      "version": "1.7.0",
+      "platform": "windows-x86_64",
+      "status": "live-certified",
+      "evidence_sha256": "replace-with-real-evidence-sha256",
+      "certified_at_utc": "2026-08-29T00:00:00Z"
+    }
+  ]
+}

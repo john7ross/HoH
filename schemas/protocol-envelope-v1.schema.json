@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoh.local/schemas/protocol-envelope-v1.schema.json",
+  "title": "HoH machine-readable CLI envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "protocol_version",
+    "message_type",
+    "ok",
+    "generated_at_utc",
+    "data"
+  ],
+  "properties": {
+    "protocol": {"const": "hoh.protocol"},
+    "protocol_version": {"const": "1.0"},
+    "message_type": {"type": "string", "minLength": 1},
+    "ok": {"type": "boolean"},
+    "generated_at_utc": {"type": "string", "format": "date-time"},
+    "data": {"type": "object"},
+    "error": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,125 @@
+@startuml hoh-sequence
+' One task from goal to closure. Plain PlantUML; no network includes.
+title HoH - briefing, planning, one task through the three roles, and closure
+
+actor Customer
+participant "Telegram" as TG
+participant "Supervisor\n(harness or model)" as S
+control "HoH protocol and loop" as H
+control "DAG scheduler" as SCH
+participant "Worker\n(ACP / process / A2A)" as W
+participant "Policy verifier\n(deterministic gate)" as DV
+participant "Git gate\n(worktrees and commits)" as G
+participant "Critic\n(external, read-only)" as EV
+participant "Documentation gate" as D
+database "State store and journal" as ST
+
+group Briefing and role selection
+  Customer -> S : Goal or project idea
+  S -> Customer : Briefing questions while requirements are unclear
+  S -> H : role-catalog - which agents and models are available
+  S -> H : driver-catalog - the explicit transport contracts
+  S -> Customer : Choose Supervisor, Worker, optional Critic, attempt bound
+
+  opt Customer wants a role checked before committing to it
+    Customer -> H : role-conformance for one exact selected role
+    H -> H : Invoke the role in a disposable git repository
+    H -> H : Verify the repository is still clean afterwards
+    H --> Customer : Persist exact version, model and platform evidence,\nor fail closed
+  end
+
+  S -> H : ""project-plan --write --enqueue"" with the formal specification
+  H -> H : Generate .hoh/role-profile.json from the brief
+  H -> H : Resolve each driver explicitly;\nnever infer one from an agent's name
+  H -> ST : Persist the queue and the profile
+end
+
+loop Until the roadmap is accepted or blocked
+  H -> SCH : Compute ready tasks from dependency states
+  SCH --> H : Ordered bounded batch, non-overlapping allowed_paths
+
+  group Attempts, prepared in parallel
+    H -> G : Create an isolated worktree for this attempt
+    alt ACP or a dedicated edge driver
+      H -> W : One constrained task over a bounded session
+    else Generic stdin command
+      H -> W : Constrained prompt on stdin
+    else Declarative process profile
+      H -> H : Write a temporary prompt file or stdin payload
+      H -> W : One-shot command with the required safety and model arguments
+    end
+    W --> H : Filesystem changes, logs, metadata
+    H -> G : Verify the attempt's HEAD still equals the starting commit
+    H -> G : Collect the binary unified diff from the attempt worktree
+  end
+
+  note over H, G
+    Integration below is serialized in the original batch order.
+    A worker never commits, merges or pushes; only the Supervisor
+    side of HoH moves the canonical repository.
+  end note
+
+  H -> DV : Check task scope, patch policy and verification commands
+  alt Deterministic verification fails
+    DV --> H : Blocking findings
+    H --> S : Failed run evidence
+    H -> ST : Append the failure and its evidence
+  else A customer decision is required
+    S -> TG : Clarification or approval request
+    TG --> Customer : Message
+    Customer --> S : Decision
+  else Deterministic gates pass
+    DV --> H : Accepted deterministic evidence
+    H -> G : Apply the patch and create a supervisor-owned commit
+    G --> H : Exact commit id and diff
+
+    alt Critic enabled
+      H -> H : Enter review_pending and export the v2 bundle
+      alt An automatic Critic adapter is configured
+        H -> EV : Immutable bundle over the configured transport\n(direct structured model, or a read-only bounded harness)
+        EV --> H : Judgment fields
+        H -> H : Inject canonical identity, hashes, timestamp and attestation
+      else Manual Critic transport
+        H --> EV : Versioned bundle: task, commit, diff digest, scope, checks
+        EV --> H : A closed decision - approve, reject or escalate
+      end
+
+      alt Critic rejects
+        H --> S : Immutable findings and a correction brief; state rework_required
+        S -> H : review-rework confirms the exact correction instructions
+        H -> W : The original task plus supervisor-confirmed correction context
+      else Critic escalates
+        H -> TG : Customer question with the available options
+        H --> S : State escalated; the queue stops
+      else Critic approves
+        H --> S : Immutable approval evidence; the readiness gate clears
+      end
+    else Critic disabled
+      H --> S : Deterministic evidence closes the task as done
+    end
+    H -> ST : Append run, commit, bundle and decision evidence
+  end
+end
+
+group Closure
+  S -> D : Final documentation and project audit
+  D --> S : Audit result and the list of missing work
+  alt Audit fails
+    S -> H : Create remediation tasks
+  else Audit passes
+    S -> G : Final supervisor-owned commit
+    S -> TG : Project ready notification
+    TG --> Customer : Final readiness report
+  end
+end
+
+note over ST
+  Every arrow HoH handles also produces a redacted journal event:
+  actor, recipient, time, task/run/correlation ids, content and any
+  tool metadata the transport exposed. ACP notifications carry the
+  agent's own tool calls; a generic CLI exposes only the invocation
+  and its output, and HoH does not invent what an opaque worker
+  never emitted.
+end note
+
+@enduml

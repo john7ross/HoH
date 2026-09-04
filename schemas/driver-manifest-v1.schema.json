@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hoh.local/schemas/driver-manifest-v1.schema.json",
+  "title": "HoH driver manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "protocol_version", "driver_id", "role", "adapter", "task_transport", "artifact_contract", "requires_isolated_worktree", "supports_subagents", "safety_profile", "description"],
+  "properties": {
+    "protocol": {"const": "hoh.driver"},
+    "protocol_version": {"const": "1.0"},
+    "driver_id": {"type": "string", "minLength": 1},
+    "role": {"enum": ["supervisor", "worker", "critic"]},
+    "adapter": {"type": "string", "minLength": 1},
+    "task_transport": {"type": "string", "minLength": 1},
+    "artifact_contract": {"type": ["string", "null"], "minLength": 1},
+    "requires_isolated_worktree": {"type": "boolean"},
+    "supports_subagents": {"type": "boolean"},
+    "safety_profile": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1}
+  }
+}

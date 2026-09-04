@@ -1,0 +1,13 @@
+[worker]
+driver = "claude_code"
+command = "claude"
+args = []
+model = "sonnet"
+timeout_seconds = 180
+max_budget_usd = 1.0
+
+[worker.capabilities]
+task_transport = "stdin_prompt"
+artifact_contract = "worktree_diff"
+requires_isolated_worktree = true
+supports_subagents = false

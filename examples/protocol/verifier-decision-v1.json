@@ -1,0 +1,20 @@
+{
+  "protocol": "hoh.protocol",
+  "protocol_version": "1.0",
+  "message_type": "verifier.decision",
+  "decision_id": "decision-001",
+  "bundle_id": "review-00000000-0000-0000-0000-000000000001",
+  "bundle_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "reviewer": {
+    "id": "external-verifier",
+    "kind": "agent"
+  },
+  "decision": "approve",
+  "summary": "The exact commit, scope, checks, and patch evidence satisfy the task contract.",
+  "findings": [],
+  "created_at_utc": "2026-01-01T00:05:00+00:00",
+  "attestation": {
+    "reviewed_commit": "1111111111111111111111111111111111111111",
+    "reviewed_patch_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+}

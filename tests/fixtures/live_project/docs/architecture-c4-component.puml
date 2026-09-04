@@ -1,0 +1,14 @@
+@startuml hoh-c4-component
+!include <C4/C4_Component>
+
+title Billing parser - C4 component view
+
+Person(caller, "Caller", "Feeds one billing line at a time")
+
+System_Boundary(lib, "Billing parser") {
+  Component(tokens, "tokens.py", "Python", "Splits a billing line into its fields, respecting quoting")
+}
+
+Rel(caller, tokens, "split_line(line)")
+
+@enduml

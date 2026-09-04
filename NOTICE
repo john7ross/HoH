@@ -1,0 +1,8 @@
+HoH
+Copyright 2026 Sergey Lebedev
+
+This product is licensed under the Apache License, Version 2.0:
+https://www.apache.org/licenses/LICENSE-2.0
+
+Bundled third-party components keep their own licenses. They are listed in
+THIRD-PARTY-NOTICES.md, which ships inside every package next to this file.
