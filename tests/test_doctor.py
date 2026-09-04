@@ -173,16 +173,20 @@ class DoctorTests(unittest.TestCase):
                 agents=(AgentConfig(name="hermes", command="hermes"),),
             )
 
-            report = run_doctor(
-                root,
-                config,
-                env={
-                    "HOH_TELEGRAM_BOT_TOKEN": "token",
-                    "HOH_TELEGRAM_CHAT_ID": "123456",
-                    "HOH_TELEGRAM_USER_ID": "42",
-                },
-                agent_resolver=lambda command: "C:/bin/hermes.exe",
-            )
+            # The wheelhouse this fixture builds is the installation's, not the
+            # project's. Without saying so the check reads the real checkout, which
+            # has no vendor/wheels on a machine that never ran the bootstrap.
+            with patch.dict(os.environ, {"HOH_DISTRIBUTION_ROOT": tmp}):
+                report = run_doctor(
+                    root,
+                    config,
+                    env={
+                        "HOH_TELEGRAM_BOT_TOKEN": "token",
+                        "HOH_TELEGRAM_CHAT_ID": "123456",
+                        "HOH_TELEGRAM_USER_ID": "42",
+                    },
+                    agent_resolver=lambda command: "C:/bin/hermes.exe",
+                )
 
         self.assertTrue(report.ok, report.to_text())
         checks = {check.name: check for check in report.checks}

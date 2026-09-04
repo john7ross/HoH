@@ -293,8 +293,10 @@ class CliTests(unittest.TestCase):
         output = stdout.getvalue()
         # Windows requires an embedded interpreter, and this fixture has none, so
         # the command still reports a finding. What matters is which tree it names.
-        self.assertIn(str(installation), output)
-        self.assertNotIn(str(project), output)
+        # Compare resolved paths: a temporary directory can be handed out under its
+        # 8.3 short name, and the product resolves what it is given.
+        self.assertIn(str(installation.resolve()), output)
+        self.assertNotIn(str(project.resolve()), output)
 
     def test_audit_command_returns_markdown_report(self):
         with tempfile.TemporaryDirectory() as tmp:
